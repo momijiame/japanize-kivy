@@ -10,7 +10,7 @@ from kivy.core.text import LabelBase
 from kivy.core.text import DEFAULT_FONT
 
 
-RESOURCE_PATH = pathlib.Path(__file__).parent / 'resources/ipaexg00401'
+RESOURCE_PATH = str(pathlib.Path(__file__).parent / 'resources/ipaexg00401')
 
 
 def japanize():
