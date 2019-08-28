@@ -1,5 +1,7 @@
 # japanize-kivy
 
+[![CircleCI](https://circleci.com/gh/momijiame/japanize-kivy.svg?style=svg)](https://circleci.com/gh/momijiame/japanize-kivy)
+
 インポートするだけで Kivy が日本語を表示できるようになります
 
 ### インストール

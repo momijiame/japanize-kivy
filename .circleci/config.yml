@@ -1,0 +1,64 @@
+version: 2
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test-py37
+      - test-py36
+      - test-py35
+  build:
+    jobs:
+      - build-py37
+      - build-py36
+      - build-py35
+
+jobs:
+  test-py37: &test-template
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            python -m venv venv || virtualenv venv
+            . venv/bin/activate
+            pip install -U pip setuptools
+            pip install -e .[testing]
+      - run:
+          name: Run tests
+          command: |
+            . venv/bin/activate
+            pytest
+  test-py36:
+    <<: *test-template
+    docker:
+      - image: circleci/python:3.6.9
+  test-py35:
+    <<: *test-template
+    docker:
+      - image: circleci/python:3.5.7
+  build-py37: &build-template
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: Build sdist
+          command: |
+            python setup.py sdist
+      - run:
+          name: Build wheel
+          command: |
+            python setup.py bdist_wheel
+  build-py36:
+    <<: *build-template
+    docker:
+      - image: circleci/python:3.6.9
+  build-py35:
+    <<: *build-template
+    docker:
+      - image: circleci/python:3.5.7
