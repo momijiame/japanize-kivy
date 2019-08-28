@@ -16,7 +16,7 @@ workflows:
 jobs:
   test-py37: &test-template
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.7.4
     working_directory: ~/repo
     steps:
       - checkout
@@ -25,6 +25,7 @@ jobs:
           command: |
             python -m venv venv || virtualenv venv
             . venv/bin/activate
+            pip install -U pip setuptools
             pip install -e .[testing]
       - run:
           name: Run tests
@@ -34,14 +35,14 @@ jobs:
   test-py36:
     <<: *test-template
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.6.9
   test-py35:
     <<: *test-template
     docker:
-      - image: circleci/python:3.5
+      - image: circleci/python:3.5.7
   build-py37: &build-template
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.7.4
     working_directory: ~/repo
     steps:
       - checkout
@@ -56,8 +57,8 @@ jobs:
   build-py36:
     <<: *build-template
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.6.9
   build-py35:
     <<: *build-template
     docker:
-      - image: circleci/python:3.5
+      - image: circleci/python:3.5.7
