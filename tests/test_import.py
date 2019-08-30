@@ -3,10 +3,12 @@
 
 import pytest
 
+import japanize_kivy
 
-def test_import():
-    """test to import with no error"""
-    import japanize_kivy
+
+def test_show_license():
+    """test to show license"""
+    japanize_kivy.show_license()
 
 
 if __name__ == '__main__':
