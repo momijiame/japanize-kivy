@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from japanize_kivy.japanizer import japanize
+from japanize_kivy.japanizer import show_license
+
 __version__ = '0.1.1'
 
-try:
-    __JAPANIZE_KIVY_SETUP__
-except NameError:
-    __JAPANIZE_KIVY_SETUP__ = False
+__all__ = ['japanize', 'show_license']
 
-
-if not __JAPANIZE_KIVY_SETUP__:
-    from japanize_kivy.japanizer import japanize
-    from japanize_kivy.japanizer import show_license
-    japanize()
+japanize()
