@@ -39,5 +39,6 @@ $ python example/greet.py
 
 ```python
 import japanize_kivy
+
 japanize_kivy.show_license()
 ```
