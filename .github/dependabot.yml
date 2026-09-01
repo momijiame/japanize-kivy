@@ -1,0 +1,9 @@
+version: 2
+
+updates:
+
+  # ワークフローが参照している Action のバージョンを更新する
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
