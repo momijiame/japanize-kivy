@@ -19,7 +19,7 @@ jobs:
           # setuptools-scm がタグからバージョンを取得するため、すべて取得する
           fetch-depth: 0
       - name: Set up uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
       - name: Install dependencies
@@ -48,7 +48,7 @@ jobs:
           # setuptools-scm がタグからバージョンを取得するため、すべて取得する
           fetch-depth: 0
       - name: Set up uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
@@ -70,7 +70,7 @@ jobs:
           # setuptools-scm がタグからバージョンを取得するため、すべて取得する
           fetch-depth: 0
       - name: Set up uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
       - name: Build sdist and wheel
