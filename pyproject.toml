@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=77", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -40,14 +40,14 @@ dev = [
 [tool.setuptools]
 zip-safe = false
 
-[tool.setuptools.dynamic]
-version = { attr = "japanize_kivy.__version__" }
-
 [tool.setuptools.packages.find]
 include = ["japanize_kivy*"]
 
 [tool.setuptools.package-data]
 japanize_kivy = ["resources/**/*"]
+
+# バージョンは Git のタグから取得する
+[tool.setuptools_scm]
 
 [tool.pytest.ini_options]
 addopts = "-v"
