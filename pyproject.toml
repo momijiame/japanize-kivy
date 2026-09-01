@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "japanize-kivy"
+description = "japanize kivy"
+readme = "README.md"
+authors = [
+    { name = "momijiame" },
+]
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Operating System :: Unix",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "kivy",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/momijiame/japanize-kivy"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.dynamic]
+version = { attr = "japanize_kivy.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["japanize_kivy*"]
+
+[tool.setuptools.package-data]
+japanize_kivy = ["resources/**/*"]
+
+[tool.pytest.ini_options]
+addopts = "-v"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+preview = true
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # Pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "UP",  # pyupgrade
+    "RUF",  # Ruff-specific rules
+    "PIE",  # flake8-pie
+    "PERF",  # Perflint
+    "FURB",  # refurb
+    "LOG",  # flake8-logging
+    "G",  # flake8-logging-format
+    "T20",  # flake8-print
+    "FA",  # flake8-future-annotations
+    "YTT",  # flake8-2020
+    "INT",  # flake8-gettext
+    "SLOT",  # flake8-slots
+    "PLE",  # Pylint errors
+    "PLW",  # Pylint warnings
+]
+
+[tool.ruff.lint.isort]
+force-single-line = true

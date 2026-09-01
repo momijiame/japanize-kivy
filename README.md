@@ -1,6 +1,6 @@
 # japanize-kivy
 
-[![CircleCI](https://circleci.com/gh/momijiame/japanize-kivy.svg?style=svg)](https://circleci.com/gh/momijiame/japanize-kivy)
+[![test](https://github.com/momijiame/japanize-kivy/actions/workflows/test.yml/badge.svg)](https://github.com/momijiame/japanize-kivy/actions/workflows/test.yml)
 
 インポートするだけで Kivy が日本語を表示できるようになります
 
@@ -39,5 +39,6 @@ $ python example/greet.py
 
 ```python
 import japanize_kivy
+
 japanize_kivy.show_license()
 ```
