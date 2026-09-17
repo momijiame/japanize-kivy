@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import subprocess
+import sys
+
 import pytest
 from kivy.core.text import DEFAULT_FONT
 from kivy.core.text import LabelBase
@@ -8,6 +11,12 @@ import japanize_kivy
 from japanize_kivy.japanizer import BUNDLED_FONT_NAME
 from japanize_kivy.japanizer import BUNDLED_FONT_PATH
 from japanize_kivy.japanizer import FONT_ENVVAR
+
+
+@pytest.fixture(autouse=True)
+def clean_environ(monkeypatch):
+    """実行環境の指定がテストに影響しないようにする"""
+    monkeypatch.delenv(FONT_ENVVAR, raising=False)
 
 
 @pytest.fixture
@@ -25,6 +34,17 @@ def user_font(tmp_path):
     path = tmp_path / "user.ttf"
     path.write_bytes(BUNDLED_FONT_PATH.read_bytes())
     return path
+
+
+@pytest.fixture
+def style_fonts(tmp_path):
+    """スタイルごとに区別できるフォントに見立てたファイル"""
+    fonts = {}
+    for style in ("italic", "bold", "bold_italic"):
+        path = tmp_path / f"user-{style}.ttf"
+        path.write_bytes(BUNDLED_FONT_PATH.read_bytes())
+        fonts[style] = path
+    return fonts
 
 
 def test_default_is_bundled_font(registered_fonts):
@@ -58,26 +78,56 @@ def test_custom_font_as_str(registered_fonts, user_font):
 
 def test_custom_name(registered_fonts, user_font):
     """別名で登録すると Kivy の既定のフォントには影響しない"""
-    before = registered_fonts[DEFAULT_FONT]
+    # 既定のフォントが書き換わったことを確実に検出できる値を入れておく
+    sentinel = ("sentinel.ttf",) * 4
+    registered_fonts[DEFAULT_FONT] = sentinel
 
     name = japanize_kivy.japanize(user_font, name="mincho")
 
     assert name == "mincho"
     assert registered_fonts["mincho"][0] == str(user_font)
-    assert registered_fonts[DEFAULT_FONT] == before
+    assert registered_fonts[DEFAULT_FONT] == sentinel
 
 
-def test_styles(registered_fonts, user_font, tmp_path):
+def test_styles(registered_fonts, user_font, style_fonts):
     """スタイルごとに別のフォントを指定できる"""
-    bold_font = tmp_path / "user-bold.ttf"
-    bold_font.write_bytes(BUNDLED_FONT_PATH.read_bytes())
-
-    japanize_kivy.japanize(user_font, bold=bold_font)
+    japanize_kivy.japanize(
+        user_font,
+        italic=style_fonts["italic"],
+        bold=style_fonts["bold"],
+        bold_italic=style_fonts["bold_italic"],
+    )
 
     regular, italic, bold, bold_italic = registered_fonts[DEFAULT_FONT]
-    assert bold == str(bold_font)
-    # 指定のないスタイルには regular と同じフォントが使われる
-    assert regular == italic == bold_italic == str(user_font)
+    assert regular == str(user_font)
+    assert italic == str(style_fonts["italic"])
+    assert bold == str(style_fonts["bold"])
+    assert bold_italic == str(style_fonts["bold_italic"])
+
+
+def test_style_without_specification(registered_fonts, user_font):
+    """指定のないスタイルには regular と同じフォントが使われる"""
+    japanize_kivy.japanize(user_font)
+
+    assert registered_fonts[DEFAULT_FONT] == (str(user_font),) * 4
+
+
+def test_bold_italic_falls_back_to_bold(registered_fonts, user_font, style_fonts):
+    """bold だけ指定したときは bold_italic にも bold が使われる"""
+    japanize_kivy.japanize(user_font, bold=style_fonts["bold"])
+
+    _, italic, bold, bold_italic = registered_fonts[DEFAULT_FONT]
+    assert bold == bold_italic == str(style_fonts["bold"])
+    assert italic == str(user_font)
+
+
+def test_bold_italic_falls_back_to_italic(registered_fonts, user_font, style_fonts):
+    """italic だけ指定したときは bold_italic にも italic が使われる"""
+    japanize_kivy.japanize(user_font, italic=style_fonts["italic"])
+
+    _, italic, bold, bold_italic = registered_fonts[DEFAULT_FONT]
+    assert italic == bold_italic == str(style_fonts["italic"])
+    assert bold == str(user_font)
 
 
 def test_environ(registered_fonts, user_font, monkeypatch):
@@ -138,6 +188,52 @@ def test_custom_font_can_render(registered_fonts, user_font):
     assert label.options["font_name_r"] == str(user_font)
     # 全角で描画されていれば 1 文字あたり font_size と同じ幅になる
     assert label.get_extents("こんにちは、世界") == (32 * 8, 32)
+
+
+def test_directory(registered_fonts, tmp_path):
+    """ファイル以外を指定したときは例外になる"""
+    with pytest.raises(OSError, match="font file expected"):
+        japanize_kivy.japanize(tmp_path)
+
+
+def test_relative_path(registered_fonts, tmp_path, monkeypatch):
+    """カレントディレクトリが変わっても指定したフォントが登録される"""
+    for name in ("a", "b"):
+        directory = tmp_path / name
+        directory.mkdir()
+        (directory / "same.ttf").write_bytes(BUNDLED_FONT_PATH.read_bytes())
+
+    for name in ("a", "b"):
+        monkeypatch.chdir(tmp_path / name)
+        japanize_kivy.japanize("same.ttf")
+
+        assert registered_fonts[DEFAULT_FONT][0] == str(tmp_path / name / "same.ttf")
+
+
+def test_public_names():
+    """利用者が直接書く名前は変わっていない"""
+    assert FONT_ENVVAR == "JAPANIZE_KIVY_FONT"
+    assert BUNDLED_FONT_NAME == "ipaexg"
+
+
+def test_registered_on_import(monkeypatch):
+    """インポートしただけで同梱のフォントが登録される"""
+    monkeypatch.setenv("KIVY_NO_ARGS", "1")
+    monkeypatch.setenv("KIVY_NO_CONSOLELOG", "1")
+    script = (
+        "import japanize_kivy;"
+        "from kivy.core.text import DEFAULT_FONT, LabelBase;"
+        "print(LabelBase._fonts[DEFAULT_FONT][0])"
+    )
+
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert completed.stdout.strip() == str(BUNDLED_FONT_PATH)
 
 
 if __name__ == "__main__":
