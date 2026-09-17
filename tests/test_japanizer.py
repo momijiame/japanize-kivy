@@ -172,8 +172,30 @@ def test_home_relative_path(registered_fonts, tmp_path, monkeypatch):
 
 def test_missing_font(registered_fonts):
     """指定されたフォントが見つからないときは例外になる"""
-    with pytest.raises(OSError, match="not found"):
+    with pytest.raises(OSError) as excinfo:
         japanize_kivy.japanize("/nonexistent/font.ttf")
+
+    assert excinfo.value.filename == "/nonexistent/font.ttf"
+
+
+def test_unresolvable_font(registered_fonts, tmp_path, monkeypatch):
+    """Kivy のリソースパスに解決を任せず、見つからなければ例外になる"""
+    monkeypatch.chdir(tmp_path)
+    before = dict(registered_fonts)
+
+    # 同梱のフォントと同じファイル名でも、指定された場所になければ例外にする
+    with pytest.raises(OSError):
+        japanize_kivy.japanize("ipaexg.ttf")
+
+    assert dict(registered_fonts) == before
+
+
+def test_broken_environ(registered_fonts, monkeypatch):
+    """環境変数の指定を解決できないときはフォールバックせずに例外になる"""
+    monkeypatch.setenv(FONT_ENVVAR, "~nosuchuser42/fonts/font.ttf")
+
+    with pytest.raises(RuntimeError):
+        japanize_kivy.japanize()
 
 
 def test_custom_font_can_render(registered_fonts, user_font):

@@ -23,14 +23,14 @@ FONT_ENVVAR = "JAPANIZE_KIVY_FONT"
 
 
 def _resolve(font):
-    """フォントの指定をファイルのパスに解決する"""
-    try:
-        path = pathlib.Path(font).expanduser()
-        status = path.stat()
-    except (OSError, RuntimeError):
-        # 実在しない、ホームディレクトリが特定できない、権限がないなど。
-        # ファイル名だけの指定もありうるので Kivy のリソースパスからの解決に任せる
-        return str(font)
+    """フォントの指定をファイルのパスに解決する
+
+    解決できないときは例外にする。
+    Kivy のリソースパスからの解決に任せると、意図しないフォントが黙って使われることがある
+    """
+    path = pathlib.Path(font).expanduser()
+    # 見つからなければ FileNotFoundError になる
+    status = path.stat()
 
     if not stat.S_ISREG(status.st_mode):
         msg = f"font file expected: {font}"
@@ -43,21 +43,16 @@ def _resolve(font):
 def _font_from_environ():
     """環境変数で指定されたフォントを取得する
 
-    指定がない、あるいは指定が不正なときは None を返す
+    指定がない、あるいは指定されたフォントが見つからないときは None を返す
     """
     font = os.environ.get(FONT_ENVVAR)
     if not font:
         return None
 
-    try:
-        path = pathlib.Path(font).expanduser()
-        is_file = path.is_file()
-    except (OSError, RuntimeError):
-        # 環境の問題でアプリケーションを落としたくないので、同梱のフォントにフォールバックする
-        is_file = False
-
-    if not is_file:
-        Logger.warning(f"Japanize: {FONT_ENVVAR} のフォントを使えないため同梱のフォントを使う: {font}")
+    # 読めないなどの異常は握り潰さずに例外のままにする
+    path = pathlib.Path(font).expanduser()
+    if not path.is_file():
+        Logger.warning(f"Japanize: {FONT_ENVVAR} のフォントが見つからないため同梱のフォントを使う: {font}")
         return None
 
     return path
@@ -73,7 +68,7 @@ def japanize(font=None, *, italic=None, bold=None, bold_italic=None, name=None):
     :param bold_italic: 太字かつ斜体に使うフォントファイルのパス。省略すると bold、italic、font の順に使う
     :param name: 登録する名前。省略すると Kivy の既定のフォント名になり、アプリケーション全体に適用される
     :return: 登録した名前
-    :raises OSError: 指定されたフォントファイルが見つからないとき
+    :raises OSError: 指定されたフォントファイルを読めないとき
     """
     if font is None:
         font = _font_from_environ() or BUNDLED_FONT_PATH
