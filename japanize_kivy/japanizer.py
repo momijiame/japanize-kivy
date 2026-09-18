@@ -7,7 +7,6 @@ import sys
 
 from kivy.core.text import DEFAULT_FONT
 from kivy.core.text import LabelBase
-from kivy.logger import Logger
 from kivy.resources import resource_add_path
 
 RESOURCE_PATH = pathlib.Path(__file__).parent / "resources/ipaexg00401"
@@ -41,28 +40,29 @@ def _resolve(font):
 
 
 def _font_from_environ():
-    """環境変数で指定されたフォントを取得する
+    """環境変数で指定されたフォントのパスを取得する
 
-    指定がない、あるいは指定されたフォントが見つからないときは None を返す
+    指定がないときは None を返す。
+    指定されたフォントを使えないときは、フォールバックせずに例外にする
     """
     font = os.environ.get(FONT_ENVVAR)
     if not font:
         return None
 
-    # 読めないなどの異常は握り潰さずに例外のままにする
-    path = pathlib.Path(font).expanduser()
-    if not path.is_file():
-        Logger.warning(f"Japanize: {FONT_ENVVAR} のフォントが見つからないため同梱のフォントを使う: {font}")
-        return None
-
-    return path
+    try:
+        return _resolve(font)
+    except (OSError, RuntimeError) as e:
+        # どの環境変数が原因なのかわかるようにする
+        msg = f"cannot use the font specified by {FONT_ENVVAR}: {font}"
+        raise OSError(msg) from e
 
 
 def japanize(font=None, *, italic=None, bold=None, bold_italic=None, name=None):
     """日本語を表示できるフォントを Kivy に登録する
 
     :param font: 使用するフォントファイルのパス。
-                 省略すると環境変数 JAPANIZE_KIVY_FONT、それもなければ同梱の IPAex ゴシックを使う
+                 省略すると環境変数 JAPANIZE_KIVY_FONT、それもなければ同梱の IPAex ゴシックを使う。
+                 指定されたフォントを使えないときは、別のフォントで代替せずに例外にする
     :param italic: 斜体に使うフォントファイルのパス。省略すると font と同じものを使う
     :param bold: 太字に使うフォントファイルのパス。省略すると font と同じものを使う
     :param bold_italic: 太字かつ斜体に使うフォントファイルのパス。省略すると bold、italic、font の順に使う

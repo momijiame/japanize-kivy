@@ -140,12 +140,14 @@ def test_environ(registered_fonts, user_font, monkeypatch):
 
 
 def test_environ_with_missing_font(registered_fonts, monkeypatch):
-    """環境変数の指定が不正なときは同梱のフォントにフォールバックする"""
+    """環境変数のフォントが見つからないときはフォールバックせずに例外になる"""
     monkeypatch.setenv(FONT_ENVVAR, "/nonexistent/font.ttf")
+    before = dict(registered_fonts)
 
-    japanize_kivy.japanize()
+    with pytest.raises(OSError, match=FONT_ENVVAR):
+        japanize_kivy.japanize()
 
-    assert registered_fonts[DEFAULT_FONT][0] == str(BUNDLED_FONT_PATH)
+    assert dict(registered_fonts) == before
 
 
 def test_argument_takes_precedence_over_environ(registered_fonts, user_font, tmp_path, monkeypatch):
@@ -191,10 +193,10 @@ def test_unresolvable_font(registered_fonts, tmp_path, monkeypatch):
 
 
 def test_broken_environ(registered_fonts, monkeypatch):
-    """環境変数の指定を解決できないときはフォールバックせずに例外になる"""
+    """環境変数の指定を解決できないときもフォールバックせずに例外になる"""
     monkeypatch.setenv(FONT_ENVVAR, "~nosuchuser42/fonts/font.ttf")
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(OSError, match=FONT_ENVVAR):
         japanize_kivy.japanize()
 
 
