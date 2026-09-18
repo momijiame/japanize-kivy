@@ -22,6 +22,48 @@ import japanize_kivy
 
 Kivy のアプリケーションで日本語が IPAex ゴシックフォントで表示されます。
 
+### フォントを差し替える
+
+自分で用意したフォントを使いたいときは `japanize()` にパスを渡します。
+
+```python
+import japanize_kivy
+
+japanize_kivy.japanize("~/fonts/NotoSansJP-Regular.ttf")
+```
+
+太字や斜体に別のファイルを使う場合は、あわせて指定します。
+
+```python
+japanize_kivy.japanize(
+    "~/fonts/NotoSansJP-Regular.ttf",
+    bold="~/fonts/NotoSansJP-Bold.ttf",
+)
+```
+
+`name` を指定すると別名で登録されるので、特定のウィジェットにだけ使えます。
+同梱の IPAex ゴシックは `japanize_kivy.BUNDLED_FONT_NAME` の名前で引けるため、差し替えても併用できます。
+
+```python
+name = japanize_kivy.japanize("~/fonts/Mincho.ttf", name="mincho")
+
+Label(text="見出し", font_name=name)
+Label(text="本文", font_name=japanize_kivy.BUNDLED_FONT_NAME)
+```
+
+コードを変えずに差し替えたいときは、環境変数 `JAPANIZE_KIVY_FONT` にパスを指定します。
+
+```sh
+$ JAPANIZE_KIVY_FONT=~/fonts/NotoSansJP-Regular.ttf python app.py
+```
+
+フォントは 引数 > 環境変数 > 同梱の IPAex ゴシック の順に優先されます。
+指定したフォントを使えないときは、別のフォントで代替せずにエラーになります。
+
+なお、フォントはウィジェットを作る前に決めてください。
+登録し直しても、生成済みのウィジェットはすぐには新しいフォントになりません。
+再描画された時点で切り替わるため、新旧のフォントが混在した状態になります。
+
 ### サンプル
 
 example ディレクトリ以下にサンプルがあります。
@@ -32,10 +74,11 @@ $ python example/greet.py
 
 ### ライセンス
 
-日本語の表示には IPAex ゴシックフォントを用いています。
-利用される場合は IPAex ゴシックフォントのライセンスに同意してください。
+このパッケージは IPAex ゴシックフォントを同梱して再配布しているため、
+表示に使うフォントを差し替えたかどうかにかかわらず、そのライセンスに同意してください。
+自分で用意したフォントに差し替えた場合は、あわせてそのフォントのライセンスにも従ってください。
 
-ライセンスは次のように確認できます。
+同梱しているフォントのライセンスは次のように確認できます。
 
 ```python
 import japanize_kivy
